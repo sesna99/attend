@@ -21,6 +21,8 @@ import trycatch.yj.sj.attend.model.AttendCheck2Event;
 import trycatch.yj.sj.attend.model.AttendCheckEvent;
 import trycatch.yj.sj.attend.model.AttendInfo;
 import trycatch.yj.sj.attend.model.AttendInfoEvent;
+import trycatch.yj.sj.attend.model.LoginInfo;
+import trycatch.yj.sj.attend.model.LoginInfoEvent;
 
 /**
  * Created by trycatch on 2017. 9. 18..
@@ -32,6 +34,7 @@ public class Util {
     private RetrofitService retrofitService;
     private SimpleDateFormat simpleDateFormat;
     private String date;
+    private String id;
 
     private Util() {
         retrofit = new Retrofit.Builder().baseUrl("https://smart.hansung.ac.kr").addConverterFactory(GsonConverterFactory.create()).build();
@@ -49,36 +52,36 @@ public class Util {
         }
     }
 
-    public void login(){
-        Call<ResponseBody> login = retrofitService.login("1771321", "!kim5656", "");
-        login.enqueue(new Callback<ResponseBody>() {
+    public void login(String login_id, String login_pw){
+        Call<LoginInfo> login = retrofitService.login(login_id, login_pw, "");
+        login.enqueue(new Callback<LoginInfo>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+            public void onResponse(Call<LoginInfo> call, Response<LoginInfo> response) {
                 Log.i("Retrofit", response.isSuccessful() + "");
                 if(response.isSuccessful()){
-                    try {
-                        Log.i("Retrofit", response.body().string());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    LoginInfo loginInfo = response.body();
+                    EventBus.getDefault().post(new LoginInfoEvent(true, loginInfo));
+                    id = loginInfo.getIdno();
+                }
+                else{
+                    EventBus.getDefault().post(new LoginInfoEvent(false, new LoginInfo()));
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-
+            public void onFailure(Call<LoginInfo> call, Throwable t) {
+                EventBus.getDefault().post(new LoginInfoEvent(false, new LoginInfo()));
             }
         });
     }
 
     public void atdcInfo(){
         getCurDate();
-        Call<AttendInfo> atdcInfo = retrofitService.getAtdcInfo("1771321", date);
+        Call<AttendInfo> atdcInfo = retrofitService.getAtdcInfo(id, date);
         atdcInfo.enqueue(new Callback<AttendInfo>() {
             @Override
             public void onResponse(Call<AttendInfo> call, Response<AttendInfo> response) {
                 Log.i("RetrofitAtdc", response.isSuccessful() + "");
-                Log.i("RetrofitAtdc", response.code() + "");
                 if(response.isSuccessful()){
                     EventBus.getDefault().post(new AttendInfoEvent(true, response.body()));
                 }
@@ -98,7 +101,7 @@ public class Util {
     public void atdcChk(final AttendInfo info){
         getCurDate();
         AttendInfo.Data data = info.getData();
-        Call<AttendCheck> atdcChk = retrofitService.getAtdcChk("1771321", data.getPsco(), data.getSjco(), data.getIden(), info.getResult().get(0).getMsc(), date, "", "1");
+        Call<AttendCheck> atdcChk = retrofitService.getAtdcChk(id, data.getPsco(), data.getSjco(), data.getIden(), info.getResult().get(0).getMsc(), date, "", "1");
         atdcChk.enqueue(new Callback<AttendCheck>() {
             @Override
             public void onResponse(Call<AttendCheck> call, Response<AttendCheck> response) {
@@ -133,7 +136,7 @@ public class Util {
     public void atdcChk2(AttendInfo info){
         getCurDate();
         AttendInfo.Data data = info.getData();
-        Call<AttendCheck2> atdcChk2 = retrofitService.getAtdcChk2("1771321", data.getPsco(), data.getSjco(), data.getIden(), info.getResult().get(0).getMsc(), date, "", "1", "0");
+        Call<AttendCheck2> atdcChk2 = retrofitService.getAtdcChk2(id, data.getPsco(), data.getSjco(), data.getIden(), info.getResult().get(0).getMsc(), date, "", "1", "0");
         atdcChk2.enqueue(new Callback<AttendCheck2>() {
             @Override
             public void onResponse(Call<AttendCheck2> call, Response<AttendCheck2> response) {

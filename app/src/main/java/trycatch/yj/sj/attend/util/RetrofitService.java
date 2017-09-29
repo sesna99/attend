@@ -11,6 +11,7 @@ import retrofit2.http.QueryMap;
 import trycatch.yj.sj.attend.model.AttendCheck;
 import trycatch.yj.sj.attend.model.AttendCheck2;
 import trycatch.yj.sj.attend.model.AttendInfo;
+import trycatch.yj.sj.attend.model.LoginInfo;
 
 /**
  * Created by trycatch on 2017. 9. 10..
@@ -19,7 +20,7 @@ import trycatch.yj.sj.attend.model.AttendInfo;
 public interface RetrofitService {
     @FormUrlEncoded
     @POST("/api/login_access")
-    Call<ResponseBody> login(@Field("idno") String idno, @Field("pass") String pass, @Field("uuid") String uuid);
+    Call<LoginInfo> login(@Field("idno") String idno, @Field("pass") String pass, @Field("uuid") String uuid);
 
     @POST("/api/track_list")
     Call<ResponseBody> getTrack(@QueryMap Map<String, String> query);
